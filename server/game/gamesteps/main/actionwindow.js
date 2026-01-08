@@ -24,14 +24,19 @@ class ActionWindow extends UiPrompt {
         return false;
     }
 
-    onCardDragged(player, card, from, to) {
+    onCardDragged(player, card, from, to, flank) {
         if (player === this.game.activePlayer && card.controller === player && from === 'hand') {
             if (to === 'play area') {
                 let playAction = card
                     .getLegalActions(player)
                     .find((action) => action.title.includes('Play'));
                 if (playAction) {
-                    this.game.resolveAbility(playAction.createContext(player));
+                    let context = playAction.createContext(player);
+                    // Pass flank information to the context for auto-placement
+                    if (flank) {
+                        context.dragFlank = flank;
+                    }
+                    this.game.resolveAbility(context);
                 }
             } else if (to === 'discard') {
                 let discardAction = new DiscardAction(card);

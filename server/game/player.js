@@ -288,8 +288,9 @@ class Player extends GameObject {
      * @param {String} cardId - the uuid of the dropped card
      * @param {String} source
      * @param {String} target
+     * @param {String} flank - 'left' or 'right' flank for creature placement
      */
-    drop(cardId, source, target) {
+    drop(cardId, source, target, flank) {
         let sourceList = this.getSourceList(source);
         let card = sourceList.find((card) => card.uuid === cardId);
 
@@ -299,7 +300,7 @@ class Player extends GameObject {
 
         // First, handle legal cases of drag/drop
         if (!this.game.manualMode) {
-            this.game.pipeline.handleCardDragged(this, card, source, target);
+            this.game.pipeline.handleCardDragged(this, card, source, target, flank);
         }
 
         // Any other dragging is only legal in manual mode, when the card is currently in source, when the source and target are different and when the target is a legal location
@@ -331,78 +332,88 @@ class Player extends GameObject {
 
         if (target === 'play area') {
             if (card.type === 'creature' && this.creaturesInPlay.length > 0) {
-                let choices = ['Left', 'Right'];
+                // In manual mode (which we're already in at this point), Deploy options are always available if 2+ creatures
+                // If flank is provided from client (drag position) and only 1 creature, use auto-placement
+                if (flank && this.creaturesInPlay.length === 1) {
+                    // Simple case: only 1 creature, use auto-detected flank
+                    this.moveCard(card, 'play area', {
+                        left: flank === 'left'
+                    });
+                } else {
+                    // Complex case: show menu for deploy options (if 2+ creatures) or when flank not provided
+                    let choices = ['Left', 'Right'];
 
-                if (this.creaturesInPlay.length > 1) {
-                    choices.push('Deploy Left');
-                    choices.push('Deploy Right');
-                }
+                    if (this.creaturesInPlay.length > 1) {
+                        choices.push('Deploy Left');
+                        choices.push('Deploy Right');
+                    }
 
-                this.game.promptWithHandlerMenu(
-                    this,
-                    {
-                        activePromptTitle: 'Which flank do you want to place this creature on?',
-                        context: this.game.context,
-                        source: card,
-                        choices: choices,
-                        choiceHandler: (choice) => {
-                            let deploy;
-                            let flank;
+                    this.game.promptWithHandlerMenu(
+                        this,
+                        {
+                            activePromptTitle: 'Which flank do you want to place this creature on?',
+                            context: this.game.context,
+                            source: card,
+                            choices: choices,
+                            choiceHandler: (choice) => {
+                                let deploy;
+                                let selectedFlank;
 
-                            switch (choice) {
-                                case 'Left':
-                                    flank = 'left';
-                                    deploy = false;
+                                switch (choice) {
+                                    case 'Left':
+                                        selectedFlank = 'left';
+                                        deploy = false;
 
-                                    break;
-                                case 'Right':
-                                    flank = 'right';
-                                    deploy = false;
+                                        break;
+                                    case 'Right':
+                                        selectedFlank = 'right';
+                                        deploy = false;
 
-                                    break;
-                                case 'Deploy Left':
-                                    flank = 'left';
-                                    deploy = true;
+                                        break;
+                                    case 'Deploy Left':
+                                        selectedFlank = 'left';
+                                        deploy = true;
 
-                                    break;
-                                case 'Deploy Right':
-                                    flank = 'right';
-                                    deploy = true;
+                                        break;
+                                    case 'Deploy Right':
+                                        selectedFlank = 'right';
+                                        deploy = true;
 
-                                    break;
-                            }
+                                        break;
+                                }
 
-                            if (deploy) {
-                                this.game.promptForSelect(this, {
-                                    source: card,
-                                    activePromptTitle: `Select a card to deploy to the ${flank} of`,
-                                    cardCondition: (card) =>
-                                        card.location === 'play area' &&
-                                        card.controller === this &&
-                                        card.type === 'creature',
-                                    onSelect: (p, c) => {
-                                        let deployIndex = card.controller.cardsInPlay.indexOf(c);
-                                        if (flank === 'left' && deployIndex >= 0) {
-                                            deployIndex--;
+                                if (deploy) {
+                                    this.game.promptForSelect(this, {
+                                        source: card,
+                                        activePromptTitle: `Select a card to deploy to the ${selectedFlank} of`,
+                                        cardCondition: (card) =>
+                                            card.location === 'play area' &&
+                                            card.controller === this &&
+                                            card.type === 'creature',
+                                        onSelect: (p, c) => {
+                                            let deployIndex = card.controller.cardsInPlay.indexOf(c);
+                                            if (selectedFlank === 'left' && deployIndex >= 0) {
+                                                deployIndex--;
+                                            }
+
+                                            this.moveCard(card, 'play area', {
+                                                left: selectedFlank === 'left',
+                                                deployIndex: deployIndex
+                                            });
+
+                                            return true;
                                         }
-
-                                        this.moveCard(card, 'play area', {
-                                            left: flank === 'left',
-                                            deployIndex: deployIndex
-                                        });
-
-                                        return true;
-                                    }
-                                });
-                            } else {
-                                this.moveCard(card, 'play area', {
-                                    left: flank === 'left'
-                                });
+                                    });
+                                } else {
+                                    this.moveCard(card, 'play area', {
+                                        left: selectedFlank === 'left'
+                                    });
+                                }
                             }
-                        }
-                    },
-                    this
-                );
+                        },
+                        this
+                    );
+                }
             } else if (card.type === 'upgrade') {
                 let title = `Select a creature`;
                 let cardType = ['creature'];

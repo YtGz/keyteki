@@ -61,6 +61,22 @@ class PutIntoPlayAction extends CardGameAction {
             (this.target.length === 0 || this.target[0].type === 'creature') &&
             player.cardsInPlay.some((card) => card.type === 'creature')
         ) {
+            // Check if Deploy options should be available
+            let canDeploy =
+                card.anyEffect('enterPlayAnywhere', context) ||
+                (context.ability &&
+                    context.ability.isCardPlayed() &&
+                    (this.deploy || card.hasKeyword('deploy')));
+
+            // If flank was provided via drag and deploy is not needed, use auto-placement
+            if (
+                context.dragFlank &&
+                (!canDeploy || player.creaturesInPlay.length === 1)
+            ) {
+                this.left = context.dragFlank === 'left';
+                return;
+            }
+
             let choices = ['Left'];
 
             let allowRightFlankDeploy = true;
@@ -70,13 +86,7 @@ class PutIntoPlayAction extends CardGameAction {
                 allowRightFlankDeploy = false;
             }
 
-            if (
-                (card.anyEffect('enterPlayAnywhere', context) ||
-                    (context.ability &&
-                        context.ability.isCardPlayed() &&
-                        (this.deploy || card.hasKeyword('deploy')))) &&
-                player.creaturesInPlay.length > 1
-            ) {
+            if (canDeploy && player.creaturesInPlay.length > 1) {
                 choices.push('Deploy Left');
 
                 // Can only deploy right when prevented from playing

@@ -110,8 +110,8 @@ export class GameBoard extends React.Component {
         this.props.sendGameMessage('shuffleDeck');
     }
 
-    onDragDrop(card, source, target) {
-        this.props.sendGameMessage('drop', card.uuid, source, target);
+    onDragDrop(card, source, target, flank) {
+        this.props.sendGameMessage('drop', card.uuid, source, target, flank);
     }
 
     onClickTide() {

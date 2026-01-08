@@ -405,15 +405,16 @@ class Game extends EventEmitter {
      * @param {String} cardId - uuid of card
      * @param {String} source - area where the card was dragged from
      * @param {String} target - area where the card was dropped
+     * @param {String} flank - 'left' or 'right' flank for creature placement
      */
-    drop(playerName, cardId, source, target) {
+    drop(playerName, cardId, source, target, flank) {
         let player = this.getPlayerByName(playerName);
 
         if (!player) {
             return;
         }
 
-        player.drop(cardId, source, target);
+        player.drop(cardId, source, target, flank);
     }
 
     /**

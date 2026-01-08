@@ -48,9 +48,16 @@ const Droppable = ({ children, manualMode, onDragDrop, source }) => {
         },
         drop: (_, monitor) => {
             let item = monitor.getItem();
+            let dropPosition = monitor.getClientOffset();
+            
+            // Determine flank based on drop position (left or right half of screen)
+            let flank = null;
+            if (dropPosition && source === 'play area') {
+                flank = dropPosition.x < window.innerWidth / 2 ? 'left' : 'right';
+            }
 
             if (onDragDrop) {
-                onDragDrop(item.card, item.source, source);
+                onDragDrop(item.card, item.source, source, flank);
             }
         }
     });

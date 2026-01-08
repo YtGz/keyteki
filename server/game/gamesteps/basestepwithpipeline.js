@@ -22,8 +22,8 @@ class BaseStepWithPipeline extends BaseStep {
         return this.pipeline.handleCardClicked(player, card);
     }
 
-    onCardDragged(player, card, from, to) {
-        return this.pipeline.handleCardDragged(player, card, from, to);
+    onCardDragged(player, card, from, to, flank) {
+        return this.pipeline.handleCardDragged(player, card, from, to, flank);
     }
 
     onTideClicked(player) {

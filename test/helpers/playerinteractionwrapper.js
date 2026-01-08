@@ -216,8 +216,8 @@ class PlayerInteractionWrapper {
         this.checkUnserializableGameState();
     }
 
-    drop(card, target) {
-        this.player.drop(card.uuid, card.location, target);
+    drop(card, target, flank = null) {
+        this.player.drop(card.uuid, card.location, target, flank);
         this.game.checkGameState(true);
         this.game.continue();
         this.checkUnserializableGameState();

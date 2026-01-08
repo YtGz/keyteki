@@ -37,20 +37,36 @@ describe('Drag and drop card', function () {
 
         it('player1 should be able to drag a creature from hand to play area at left flank', function () {
             expect(this.titanMechanic.location).toBe('hand');
-            this.player1.drop(this.titanMechanic, 'play area');
-            expect(this.player1).toHavePromptButton('Left');
-            expect(this.player1).toHavePromptButton('Right');
-            this.player1.clickPrompt('Left');
+            this.player1.drop(this.titanMechanic, 'play area', 'left');
             expect(this.titanMechanic.location).toBe('play area');
         });
 
         it('player1 should be able to drag a creature from hand to play area at right flank', function () {
             expect(this.titanMechanic.location).toBe('hand');
-            this.player1.drop(this.titanMechanic, 'play area');
-            expect(this.player1).toHavePromptButton('Left');
-            expect(this.player1).toHavePromptButton('Right');
-            this.player1.clickPrompt('Left');
+            this.player1.drop(this.titanMechanic, 'play area', 'right');
             expect(this.titanMechanic.location).toBe('play area');
+        });
+
+        it("player2 should be able to drag a creature from hand to play area at right flank", function () {
+            expect(this.dextre.location).toBe('hand');
+            this.player2.drop(this.dextre, 'play area');
+            expect(this.player2).toHavePromptButton('Left');
+            expect(this.player2).toHavePromptButton('Right');
+            expect(this.player2).toHavePromptButton('Deploy Left');
+            expect(this.player2).toHavePromptButton('Deploy Right');
+            this.player2.clickPrompt('Right');
+            expect(this.dextre.location).toBe('play area');
+        });
+
+        it("player2 should be able to drag a creature from hand to play area at left flank", function () {
+            expect(this.dextre.location).toBe('hand');
+            this.player2.drop(this.dextre, 'play area');
+            expect(this.player2).toHavePromptButton('Left');
+            expect(this.player2).toHavePromptButton('Right');
+            expect(this.player2).toHavePromptButton('Deploy Left');
+            expect(this.player2).toHavePromptButton('Deploy Right');
+            this.player2.clickPrompt('Left');
+            expect(this.dextre.location).toBe('play area');
         });
 
         it("player2 should be able to drag a creature from hand to play area at a creature's right flank", function () {
@@ -128,8 +144,7 @@ describe('Drag and drop card', function () {
         });
 
         it('should apply persistent effects', function () {
-            this.player1.drop(this.lamindra, 'play area');
-            this.player1.clickPrompt('Left');
+            this.player1.drop(this.lamindra, 'play area', 'left');
             expect(this.lamindra.location).toBe('play area');
             expect(this.niffleApe.getKeywordValue('elusive')).toBe(1);
         });
@@ -144,8 +159,7 @@ describe('Drag and drop card', function () {
         });
 
         it('should apply terminal condition', function () {
-            this.player1.drop(this.tirelessCrocag, 'play area');
-            this.player1.clickPrompt('Left');
+            this.player1.drop(this.tirelessCrocag, 'play area', 'left');
             expect(this.tirelessCrocag.location).toBe('discard');
         });
     });
