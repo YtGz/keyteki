@@ -51,6 +51,7 @@ const Droppable = ({ children, manualMode, onDragDrop, source }) => {
             let dropPosition = monitor.getClientOffset();
             
             // Determine flank based on drop position (left or right half of play area)
+            // If play-area element not found, pass null to trigger UI button selection
             let flank = null;
             if (dropPosition && source === 'play area') {
                 const playArea = document.querySelector('.play-area');
@@ -58,8 +59,6 @@ const Droppable = ({ children, manualMode, onDragDrop, source }) => {
                     const rect = playArea.getBoundingClientRect();
                     const midpoint = rect.left + rect.width / 2;
                     flank = dropPosition.x < midpoint ? 'left' : 'right';
-                } else {
-                    flank = dropPosition.x < window.innerWidth / 2 ? 'left' : 'right';
                 }
             }
 
