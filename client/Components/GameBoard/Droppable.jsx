@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useCallback } from 'react';
 import { useDrop } from 'react-dnd';
 import classNames from 'classnames';
 
@@ -16,6 +16,7 @@ const validTargets = {
 };
 
 const Droppable = ({ children, manualMode, onDragDrop, source }) => {
+    const elementRef = useRef(null);
     const [{ canDrop, isOver, itemSource }, drop] = useDrop({
         accept: ItemTypes.CARD,
         canDrop: (_, monitor) => {
@@ -49,17 +50,14 @@ const Droppable = ({ children, manualMode, onDragDrop, source }) => {
         drop: (_, monitor) => {
             let item = monitor.getItem();
             let dropPosition = monitor.getClientOffset();
-            
-            // Determine flank based on drop position (left or right half of play area)
-            // If play-area element not found, pass null to trigger UI button selection
+
+            // Determine flank based on drop position (left or right half of droppable area)
+            // If element ref not available, pass null to trigger UI button selection
             let flank = null;
-            if (dropPosition && source === 'play area') {
-                const playArea = document.querySelector('.play-area');
-                if (playArea) {
-                    const rect = playArea.getBoundingClientRect();
-                    const midpoint = rect.left + rect.width / 2;
-                    flank = dropPosition.x < midpoint ? 'left' : 'right';
-                }
+            if (dropPosition && source === 'play area' && elementRef.current) {
+                const rect = elementRef.current.getBoundingClientRect();
+                const midpoint = rect.left + rect.width / 2;
+                flank = dropPosition.x < midpoint ? 'left' : 'right';
             }
 
             if (onDragDrop) {
@@ -78,8 +76,17 @@ const Droppable = ({ children, manualMode, onDragDrop, source }) => {
         [source]: source !== 'play area'
     });
 
+    // Combine the drop connector with our element ref
+    const setRefs = useCallback(
+        (node) => {
+            elementRef.current = node;
+            drop(node);
+        },
+        [drop]
+    );
+
     return (
-        <div className={dropClass} ref={drop}>
+        <div className={dropClass} ref={setRefs}>
             <div className={className} />
             {children}
         </div>
