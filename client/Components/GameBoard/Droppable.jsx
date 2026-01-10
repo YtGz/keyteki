@@ -50,10 +50,17 @@ const Droppable = ({ children, manualMode, onDragDrop, source }) => {
             let item = monitor.getItem();
             let dropPosition = monitor.getClientOffset();
             
-            // Determine flank based on drop position (left or right half of screen)
+            // Determine flank based on drop position (left or right half of play area)
             let flank = null;
             if (dropPosition && source === 'play area') {
-                flank = dropPosition.x < window.innerWidth / 2 ? 'left' : 'right';
+                const playArea = document.querySelector('.play-area');
+                if (playArea) {
+                    const rect = playArea.getBoundingClientRect();
+                    const midpoint = rect.left + rect.width / 2;
+                    flank = dropPosition.x < midpoint ? 'left' : 'right';
+                } else {
+                    flank = dropPosition.x < window.innerWidth / 2 ? 'left' : 'right';
+                }
             }
 
             if (onDragDrop) {
