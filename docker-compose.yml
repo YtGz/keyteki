@@ -14,8 +14,14 @@ services:
             - './less:/usr/src/app/less'
         links:
             - postgres
+            - redis
         depends_on:
-            - postgres
+            postgres:
+                condition: service_started
+            redis:
+                condition: service_healthy
+        environment:
+            - NODE_ENV=development
         command:
             - node
             - '--inspect=0.0.0.0:9229'
@@ -24,7 +30,7 @@ services:
         restart: always
         build: .
         ports:
-            - '48723:9500'
+            - '48723:48723'
             - '48724:9339'
         volumes:
             - './server:/usr/src/app/server'
@@ -52,9 +58,13 @@ services:
             - '48726:6379'
         volumes:
             - $PWD/redis-data:/var/lib/redis
-            - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
         environment:
             - REDIS_REPLICATION_MODE=master
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 5s
+            timeout: 3s
+            retries: 5
 volumes:
     postgres:
     node_modules:

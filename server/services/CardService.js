@@ -7,7 +7,13 @@ class CardService {
         const factory = new RedisClientFactory(configService);
         this.redis = factory.createClient();
 
-        this.redis.connect();
+        this.redis.on('error', (err) => {
+            logger.error('Redis error in CardService:', err);
+        });
+
+        this.redis.connect().catch((err) => {
+            logger.error('Failed to connect to Redis:', err);
+        });
 
         this.cardExpansionCache = {};
     }
