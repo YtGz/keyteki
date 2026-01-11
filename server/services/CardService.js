@@ -7,15 +7,22 @@ class CardService {
         const factory = new RedisClientFactory(configService);
         this.redis = factory.createClient();
 
-        this.redis.on('error', (err) => {
-            logger.error('Redis error in CardService:', err);
-        });
-
-        this.redis.connect().catch((err) => {
+        this.redisReady = this.redis.connect().then(() => {
+            this.redis.on('error', (err) => {
+                logger.error('Redis error in CardService:', err);
+            });
+            return true;
+        }).catch((err) => {
             logger.error('Failed to connect to Redis:', err);
+            return false;
         });
 
         this.cardExpansionCache = {};
+    }
+
+    async ensureRedisConnected() {
+        await this.redisReady;
+        return this.redis.isReady;
     }
 
     async replaceCards(cards) {
@@ -126,7 +133,10 @@ class CardService {
             cardsById[card.id] = card;
         }
 
-        await this.redis.set('cards', JSON.stringify(cardsById));
+        const redisConnected = await this.ensureRedisConnected();
+        if (redisConnected) {
+            await this.redis.set('cards', JSON.stringify(cardsById));
+        }
     }
 
     async getAllCards(options) {
@@ -134,7 +144,8 @@ class CardService {
             return this.cardCache;
         }
 
-        let redisCards = await this.redis.get('cards');
+        const redisConnected = await this.ensureRedisConnected();
+        let redisCards = redisConnected ? await this.redis.get('cards') : null;
         if (redisCards) {
             logger.info('Found cached cards in redis');
 
@@ -178,7 +189,9 @@ class CardService {
         }
 
         logger.info('Cards loaded from database, sending to redis');
-        await this.redis.set('cards', JSON.stringify(retCards));
+        if (redisConnected) {
+            await this.redis.set('cards', JSON.stringify(retCards));
+        }
         this.cardCache = retCards;
 
         return retCards;
@@ -189,7 +202,8 @@ class CardService {
             return this.cardExpansionCache[expansionId];
         }
 
-        let redisCards = await this.redis.get(`cards:${expansionId}`);
+        const redisConnected = await this.ensureRedisConnected();
+        let redisCards = redisConnected ? await this.redis.get(`cards:${expansionId}`) : null;
         if (redisCards) {
             logger.info(`Found cached cards for ${expansionId} in redis`);
 
@@ -233,7 +247,9 @@ class CardService {
         }
 
         logger.info('Cards loaded from database, sending to redis');
-        await this.redis.set(`cards:${expansionId}`, JSON.stringify(retCards));
+        if (redisConnected) {
+            await this.redis.set(`cards:${expansionId}`, JSON.stringify(retCards));
+        }
         this.cardExpansionCache[expansionId] = retCards;
 
         return retCards;

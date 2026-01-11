@@ -9,7 +9,16 @@ class RedisClientFactory {
 
     createClient() {
         const client = redis.createClient({
-            url: this.configService.getValue('redisUrl')
+            url: this.configService.getValue('redisUrl'),
+            socket: {
+                connectTimeout: 10000,
+                reconnectStrategy: (retries) => {
+                    if (retries > 3) {
+                        return false;
+                    }
+                    return Math.min(retries * 500, 3000);
+                }
+            }
         });
 
         return this.wrapClient(client);
