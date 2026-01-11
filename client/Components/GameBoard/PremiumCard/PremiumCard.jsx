@@ -1,33 +1,60 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Application, Container, Sprite, Graphics, Text, TextStyle, Filter } from 'pixi.js';
+import {
+    Application,
+    Assets,
+    Container,
+    Sprite,
+    Graphics,
+    Text,
+    TextStyle,
+    Filter,
+    GlProgram
+} from 'pixi.js';
 import classNames from 'classnames';
 
 import './PremiumCard.scss';
 
-// Vertex shader for 3D perspective
-const perspectiveVert = `
-attribute vec2 aVertexPosition;
-attribute vec2 aTextureCoord;
-uniform mat3 projectionMatrix;
-varying vec2 vTextureCoord;
+// Default vertex shader for filters in PixiJS v8
+const defaultFilterVert = `
+in vec2 aPosition;
+out vec2 vTextureCoord;
 
-void main(void) {
-    gl_Position = vec4((projectionMatrix * vec3(aVertexPosition, 1.0)).xy, 0.0, 1.0);
-    vTextureCoord = aTextureCoord;
+uniform vec4 uInputSize;
+uniform vec4 uOutputFrame;
+uniform vec4 uOutputTexture;
+
+vec4 filterVertexPosition(void)
+{
+    vec2 position = aPosition * uOutputFrame.zw + uOutputFrame.xy;
+    position.x = position.x * (2.0 / uOutputTexture.x) - 1.0;
+    position.y = position.y * (2.0 * uOutputTexture.z / uOutputTexture.y) - uOutputTexture.z;
+    return vec4(position, 0.0, 1.0);
+}
+
+vec2 filterTextureCoord(void)
+{
+    return aPosition * (uOutputFrame.zw * uInputSize.zw);
+}
+
+void main(void)
+{
+    gl_Position = filterVertexPosition();
+    vTextureCoord = filterTextureCoord();
 }
 `;
 
-// Fragment shader for holographic/shimmer effect
+// Fragment shader for holographic/shimmer effect (PixiJS v8 syntax)
 const holographicFrag = `
-precision mediump float;
-varying vec2 vTextureCoord;
-uniform sampler2D uSampler;
+in vec2 vTextureCoord;
+out vec4 finalColor;
+
+uniform sampler2D uTexture;
 uniform float uTime;
 uniform float uIntensity;
 uniform vec2 uMouse;
 
 void main(void) {
-    vec4 color = texture2D(uSampler, vTextureCoord);
+    vec4 color = texture(uTexture, vTextureCoord);
     
     // Rainbow holographic shift based on angle and time
     float angle = atan(vTextureCoord.y - 0.5, vTextureCoord.x - 0.5);
@@ -51,22 +78,23 @@ void main(void) {
     color.rgb = mix(color.rgb, color.rgb + holoColor * 0.2, uIntensity);
     color.rgb += highlight;
     
-    gl_FragColor = color;
+    finalColor = color;
 }
 `;
 
-// Fragment shader for energy glow effect (reserved for future use)
+// Fragment shader for energy glow effect (reserved for future use, PixiJS v8 syntax)
 // eslint-disable-next-line no-unused-vars
 const glowFrag = `
-precision mediump float;
-varying vec2 vTextureCoord;
-uniform sampler2D uSampler;
+in vec2 vTextureCoord;
+out vec4 finalColor;
+
+uniform sampler2D uTexture;
 uniform float uTime;
 uniform vec3 uGlowColor;
 uniform float uGlowIntensity;
 
 void main(void) {
-    vec4 color = texture2D(uSampler, vTextureCoord);
+    vec4 color = texture(uTexture, vTextureCoord);
     
     // Pulsing glow
     float pulse = sin(uTime * 3.0) * 0.5 + 0.5;
@@ -77,7 +105,7 @@ void main(void) {
     // Apply glow
     color.rgb += uGlowColor * edge * pulse * uGlowIntensity;
     
-    gl_FragColor = color;
+    finalColor = color;
 }
 `;
 
@@ -190,7 +218,7 @@ const PremiumCard = ({
               }`;
 
         try {
-            const texture = await app.renderer.texture.loadTexture(imageUrl);
+            const texture = await Assets.load(imageUrl);
 
             // Clear previous content
             app.stage.removeChildren();
@@ -253,16 +281,18 @@ const PremiumCard = ({
 
     // Create holographic shader filter
     const createHolographicFilter = () => {
+        const glProgram = new GlProgram({
+            vertex: defaultFilterVert,
+            fragment: holographicFrag
+        });
+
         const filter = new Filter({
-            glProgram: {
-                vertex: perspectiveVert,
-                fragment: holographicFrag
-            },
+            glProgram,
             resources: {
-                uniforms: {
+                holoUniforms: {
                     uTime: { value: 0, type: 'f32' },
                     uIntensity: { value: 0.5, type: 'f32' },
-                    uMouse: { value: [0.5, 0.5], type: 'vec2<f32>' }
+                    uMouse: { value: new Float32Array([0.5, 0.5]), type: 'vec2<f32>' }
                 }
             }
         });
@@ -419,9 +449,10 @@ const PremiumCard = ({
             // Update shader uniforms
             if (spriteRef.current?.filters) {
                 for (const filter of spriteRef.current.filters) {
-                    if (filter.resources?.uniforms) {
-                        filter.resources.uniforms.uTime = timeRef.current;
-                        filter.resources.uniforms.uMouse = [mousePos.x, mousePos.y];
+                    if (filter.resources?.holoUniforms?.uniforms) {
+                        filter.resources.holoUniforms.uniforms.uTime = timeRef.current;
+                        filter.resources.holoUniforms.uniforms.uMouse[0] = mousePos.x;
+                        filter.resources.holoUniforms.uniforms.uMouse[1] = mousePos.y;
                     }
                 }
             }
