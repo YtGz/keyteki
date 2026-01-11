@@ -5,7 +5,7 @@ import { useDrag } from 'react-dnd';
 
 import CardMenu from './CardMenu';
 import CardImage from './CardImage';
-import PremiumCard from './PremiumCard';
+import { PremiumCard } from './PremiumCard';
 import { ItemTypes } from '../../constants';
 import SquishableCardPanel from './SquishableCardPanel';
 
