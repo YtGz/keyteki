@@ -37,6 +37,7 @@ import './Profile.scss';
  * @property {boolean} orderForcedAbilities Whether or not to order forced abilities
  * @property {boolean} confirmOneClick Force a prompt for one click abilities
  * @property {boolean} useHalfSizedCards Use halfSize card images
+ * @property {boolean} usePremiumCardRendering Use premium WebGL card rendering
  */
 
 /**
@@ -73,7 +74,8 @@ const initialValues = {
         confirmOneClick: false,
         orderForcedAbilities: false,
         useHalfSizedCards: false,
-        showAccolades: true
+        showAccolades: true,
+        usePremiumCardRendering: false
     }
 };
 

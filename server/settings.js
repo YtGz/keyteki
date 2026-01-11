@@ -2,7 +2,8 @@ const defaultOptionSettings = {
     orderForcedAbilities: false,
     confirmOneClick: true,
     useHalfSizedCards: false,
-    showAccolades: true
+    showAccolades: true,
+    usePremiumCardRendering: false
 };
 
 const defaultSettings = {

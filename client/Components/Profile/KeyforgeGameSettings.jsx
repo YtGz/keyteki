@@ -65,6 +65,17 @@ const KeyforgeGameSettings = ({ formProps }) => {
                     onBlur={formProps.handleBlur}
                 />
             </Form.Row>
+            <Form.Row>
+                <Form.Check
+                    id='usePremiumCardRendering'
+                    name='gameOptions.usePremiumCardRendering'
+                    label={t('Use premium card rendering (experimental)')}
+                    type='switch'
+                    checked={formProps.values.gameOptions.usePremiumCardRendering}
+                    onChange={formProps.handleChange}
+                    onBlur={formProps.handleBlur}
+                />
+            </Form.Row>
         </Panel>
     );
 };
