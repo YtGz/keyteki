@@ -5,8 +5,8 @@ services:
         build: .
         image: keyteki
         ports:
-            - '4000:4000'
-            - '9229:9229'
+            - '48721:4000'
+            - '48722:9229'
         volumes:
             - './client:/usr/src/app/client'
             - './server:/usr/src/app/server'
@@ -24,8 +24,8 @@ services:
         restart: always
         build: .
         ports:
-            - '9500:9500'
-            - '9339:9339'
+            - '48723:9500'
+            - '48724:9339'
         volumes:
             - './server:/usr/src/app/server'
         command:
@@ -40,7 +40,7 @@ services:
             POSTGRES_USER: ${POSTGRES_USER:-keyteki}
             POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changemeplease}
         ports:
-            - '54320:5432'
+            - '48725:5432'
         volumes:
             - postgres:/data/postgres
             - ./server/db/schema:/docker-entrypoint-initdb.d
@@ -49,7 +49,7 @@ services:
         image: 'redis:alpine'
         command: redis-server
         ports:
-            - '6379:6379'
+            - '48726:6379'
         volumes:
             - $PWD/redis-data:/var/lib/redis
             - $PWD/redis.conf:/usr/local/etc/redis/redis.conf
