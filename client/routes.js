@@ -27,6 +27,7 @@ import Privacy from './pages/Privacy';
 import BanlistAdmin from './pages/BanlistAdmin';
 import Patreon from './pages/Patreon';
 import AllianceBuilderPage from './pages/AllianceBuilder';
+import PremiumCardDemo from './Components/GameBoard/PremiumCard/PremiumCardDemo';
 
 const routes = [
     { path: '/', action: () => <Lobby key='lobby' /> },
@@ -86,7 +87,8 @@ const routes = [
         action: () => <MotdAdmin key='motdadmin' />,
         permission: 'canManageMotd'
     },
-    { path: '/patreon', action: (context) => <Patreon code={context.params.code} /> }
+    { path: '/patreon', action: (context) => <Patreon code={context.params.code} /> },
+    { path: '/premium-card-demo', action: () => <PremiumCardDemo key='premiumcarddemo' /> }
 ];
 
 export default routes;

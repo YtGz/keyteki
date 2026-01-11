@@ -1,0 +1,212 @@
+.premium-card {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transform-style: preserve-3d;
+    perspective: 1000px;
+    border-radius: 4px;
+    overflow: visible;
+
+    canvas {
+        border-radius: 4px;
+        display: block;
+    }
+
+    // Hover lift effect
+    &--hovered {
+        transform: translateY(-4px) scale(1.02);
+        z-index: 100;
+
+        &::after {
+            opacity: 1;
+        }
+    }
+
+    // Glow effect behind card
+    &::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        border-radius: 4px;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        opacity: 0;
+        transition: opacity 0.2s ease;
+        pointer-events: none;
+        z-index: -1;
+    }
+
+    // Premium card effects
+    &--premium {
+        &::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            border-radius: 6px;
+            background: linear-gradient(
+                45deg,
+                #ff6b6b,
+                #feca57,
+                #48dbfb,
+                #ff9ff3,
+                #54a0ff,
+                #5f27cd
+            );
+            background-size: 400% 400%;
+            animation: premium-border 3s ease infinite;
+            z-index: -2;
+            opacity: 0.8;
+        }
+
+        &::after {
+            box-shadow: 
+                0 0 30px rgba(255, 215, 0, 0.4),
+                0 0 60px rgba(255, 215, 0, 0.2);
+        }
+
+        &.premium-card--hovered {
+            &::before {
+                opacity: 1;
+                animation: premium-border 1s ease infinite;
+            }
+
+            &::after {
+                box-shadow: 
+                    0 0 40px rgba(255, 215, 0, 0.6),
+                    0 0 80px rgba(255, 215, 0, 0.3);
+            }
+        }
+    }
+
+    // Exhausted/tapped state
+    &--exhausted {
+        transform: rotate(90deg);
+
+        &.premium-card--hovered {
+            transform: rotate(90deg) translateY(-4px) scale(1.02);
+        }
+    }
+
+    // Disabled state
+    &--disabled {
+        filter: grayscale(100%) brightness(60%);
+        cursor: not-allowed;
+
+        &:hover {
+            transform: none;
+        }
+    }
+
+    // Size variants
+    &--small {
+        font-size: 0.6em;
+    }
+
+    &--large {
+        font-size: 1.4em;
+    }
+
+    &--x-large {
+        font-size: 2em;
+    }
+}
+
+// Animated gradient border for premium cards
+@keyframes premium-border {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+// Particle container
+.premium-card__particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    overflow: hidden;
+    border-radius: 4px;
+}
+
+// Shimmer overlay
+.premium-card__shimmer {
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(
+        90deg,
+        transparent,
+        rgba(255, 255, 255, 0.2),
+        transparent
+    );
+    animation: shimmer 2s infinite;
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0% {
+        left: -100%;
+    }
+    100% {
+        left: 200%;
+    }
+}
+
+// Selection highlight
+.premium-card--selected {
+    &::after {
+        opacity: 1;
+        box-shadow: 0 0 0 3px #4ecdc4, 0 0 20px rgba(78, 205, 196, 0.5);
+    }
+}
+
+// Can play highlight
+.premium-card--can-play {
+    animation: can-play-pulse 2s ease infinite;
+}
+
+@keyframes can-play-pulse {
+    0%, 100% {
+        box-shadow: 0 0 10px rgba(145, 189, 9, 0.5);
+    }
+    50% {
+        box-shadow: 0 0 25px rgba(145, 189, 9, 0.8);
+    }
+}
+
+// Hover info overlay
+.premium-card__info {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    pointer-events: none;
+    z-index: 1000;
+
+    .premium-card:hover & {
+        opacity: 1;
+    }
+}
