@@ -170,26 +170,43 @@ const PremiumCard = ({
     useEffect(() => {
         if (!containerRef.current) return;
 
+        // Capture current values for this effect instance
+        const currentCardSize = cardSize;
+        const currentIsPremium = isPremium;
+        const currentHouseColors = houseColors;
+
+        // Clear any existing canvas elements before creating new app
+        while (containerRef.current.firstChild) {
+            containerRef.current.removeChild(containerRef.current.firstChild);
+        }
+
         const app = new Application();
+        let isDestroyed = false;
 
         const initApp = async () => {
             await app.init({
-                width: cardSize.width,
-                height: cardSize.height,
+                width: currentCardSize.width,
+                height: currentCardSize.height,
                 backgroundAlpha: 0,
                 antialias: true,
                 resolution: window.devicePixelRatio || 2,
                 autoDensity: true
             });
 
+            // Check if component unmounted or effect was cleaned up during init
+            if (!containerRef.current || isDestroyed) {
+                app.destroy(false);
+                return;
+            }
+
             containerRef.current.appendChild(app.canvas);
             appRef.current = app;
 
-            // Load and display card
-            await loadCard(app);
+            // Load and display card with captured values
+            await loadCardWithValues(app, currentCardSize, currentIsPremium, currentHouseColors);
 
             // Start animation loop if premium
-            if (isPremium) {
+            if (currentIsPremium) {
                 startAnimationLoop(app);
             }
         };
@@ -197,18 +214,30 @@ const PremiumCard = ({
         initApp();
 
         return () => {
+            isDestroyed = true;
             if (animationRef.current) {
                 cancelAnimationFrame(animationRef.current);
+                animationRef.current = null;
             }
             if (appRef.current) {
-                appRef.current.destroy(true, { children: true, texture: true });
+                // Clear stage children without destroying textures (Assets manages them)
+                appRef.current.stage.removeChildren();
+                // Destroy app without touching textures
+                appRef.current.destroy(false, { children: false, texture: false });
                 appRef.current = null;
             }
+            spriteRef.current = null;
         };
-    }, [card?.id, size, isPremium]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [card?.id, size, isPremium, card?.house]);
 
-    // Load card texture and create sprite
-    const loadCard = async (app) => {
+    // Load card texture and create sprite - accepts explicit values to avoid stale closures
+    const loadCardWithValues = async (
+        app,
+        currentCardSize,
+        currentIsPremium,
+        currentHouseColors
+    ) => {
         if (!card || !app) return;
 
         const imageUrl = card.facedown
@@ -225,24 +254,24 @@ const PremiumCard = ({
 
             // Create main card container with 3D transform support
             const cardContainer = new Container();
-            cardContainer.pivot.set(cardSize.width / 2, cardSize.height / 2);
-            cardContainer.position.set(cardSize.width / 2, cardSize.height / 2);
+            cardContainer.pivot.set(currentCardSize.width / 2, currentCardSize.height / 2);
+            cardContainer.position.set(currentCardSize.width / 2, currentCardSize.height / 2);
 
             // Shadow layer
             const shadow = new Graphics();
             shadow.fill({ color: 0x000000, alpha: 0.4 });
-            shadow.roundRect(-2, 2, cardSize.width, cardSize.height, 4);
+            shadow.roundRect(-2, 2, currentCardSize.width, currentCardSize.height, 4);
             shadow.fill();
             cardContainer.addChild(shadow);
 
             // Card sprite
             const sprite = new Sprite(texture);
-            sprite.width = cardSize.width;
-            sprite.height = cardSize.height;
+            sprite.width = currentCardSize.width;
+            sprite.height = currentCardSize.height;
             spriteRef.current = sprite;
 
             // Apply premium effects
-            if (isPremium && !card.facedown) {
+            if (currentIsPremium && !card.facedown) {
                 // Add holographic filter
                 const holoFilter = createHolographicFilter();
                 sprite.filters = [holoFilter];
@@ -251,20 +280,25 @@ const PremiumCard = ({
             cardContainer.addChild(sprite);
 
             // Add frame overlay (rendered on top)
-            const frame = createCardFrame(card, cardSize, houseColors);
+            const frame = createCardFrame(
+                card,
+                currentCardSize,
+                currentHouseColors,
+                currentIsPremium
+            );
             if (frame) {
                 cardContainer.addChild(frame);
             }
 
             // Add stats overlay
             if (card.type === 'creature' && !card.facedown) {
-                const stats = createStatsOverlay(card, cardSize);
+                const stats = createStatsOverlay(card, currentCardSize);
                 cardContainer.addChild(stats);
             }
 
             // Add token overlays
             if (card.tokens && Object.keys(card.tokens).length > 0) {
-                const tokens = createTokenOverlay(card, cardSize);
+                const tokens = createTokenOverlay(card, currentCardSize);
                 cardContainer.addChild(tokens);
             }
 
@@ -275,7 +309,7 @@ const PremiumCard = ({
         } catch (error) {
             console.error('Failed to load card image:', error);
             // Show fallback
-            createFallbackCard(app);
+            createFallbackCard(app, currentCardSize);
         }
     };
 
@@ -300,11 +334,11 @@ const PremiumCard = ({
     };
 
     // Create card frame graphics
-    const createCardFrame = (card, size, colors) => {
+    const createCardFrame = (card, size, colors, premium) => {
         const frame = new Graphics();
 
         // Outer glow
-        if (isPremium) {
+        if (premium) {
             frame.stroke({ width: 3, color: colors.primary, alpha: 0.6 });
             frame.roundRect(0, 0, size.width, size.height, 4);
             frame.stroke();
@@ -421,10 +455,10 @@ const PremiumCard = ({
     };
 
     // Create fallback card display
-    const createFallbackCard = (app) => {
+    const createFallbackCard = (app, size) => {
         const graphics = new Graphics();
         graphics.fill({ color: 0x333333 });
-        graphics.roundRect(0, 0, cardSize.width, cardSize.height, 4);
+        graphics.roundRect(0, 0, size.width, size.height, 4);
         graphics.fill();
 
         const text = new Text({
@@ -435,7 +469,7 @@ const PremiumCard = ({
             })
         });
         text.anchor.set(0.5);
-        text.position.set(cardSize.width / 2, cardSize.height / 2);
+        text.position.set(size.width / 2, size.height / 2);
 
         app.stage.addChild(graphics);
         app.stage.addChild(text);
