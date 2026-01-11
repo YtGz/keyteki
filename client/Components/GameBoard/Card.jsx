@@ -5,6 +5,7 @@ import { useDrag } from 'react-dnd';
 
 import CardMenu from './CardMenu';
 import CardImage from './CardImage';
+import PremiumCard from './PremiumCard';
 import { ItemTypes } from '../../constants';
 import SquishableCardPanel from './SquishableCardPanel';
 
@@ -27,6 +28,7 @@ const Card = ({
     size,
     source,
     style,
+    usePremiumRendering,
     wrapped
 }) => {
     const { i18n } = useTranslation();
@@ -219,7 +221,19 @@ const Card = ({
         });
         let image = card ? (
             <div className={imageClass}>
-                <CardImage card={card} cardBack={cardBack} size={size} halfSize={halfSize} />
+                {usePremiumRendering && source === 'play area' ? (
+                    <PremiumCard
+                        card={card}
+                        cardBack={cardBack}
+                        size={size}
+                        orientation={orientation}
+                        onMouseOver={onMouseOver}
+                        onMouseOut={onMouseOut}
+                        onClick={() => onClick && onClick(card)}
+                    />
+                ) : (
+                    <CardImage card={card} cardBack={cardBack} size={size} halfSize={halfSize} />
+                )}
             </div>
         ) : null;
         return (
@@ -305,6 +319,7 @@ Card.defaultProps = {
     halfSize: false,
     isSpectating: true,
     orientation: 'vertical',
+    usePremiumRendering: false,
     wrapped: true
 };
 

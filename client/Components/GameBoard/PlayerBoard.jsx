@@ -69,6 +69,9 @@ class PlayerBoard extends React.Component {
                 onMouseOver={this.props.onMouseOver}
                 size={this.props.user.settings.cardSize}
                 source='play area'
+                usePremiumRendering={
+                    this.props.user.settings.optionSettings.usePremiumCardRendering
+                }
             />
         ));
     }

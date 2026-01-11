@@ -193,6 +193,9 @@ export class ParticleEmitter extends Container {
         this.bounds = { width: 100, height: 100 };
         this.active = true;
 
+        // Bind update method
+        this.update = this.update.bind(this);
+
         // Pre-create particle pool
         this.initParticlePool();
 
@@ -241,7 +244,7 @@ export class ParticleEmitter extends Container {
         }
     }
 
-    update = (ticker) => {
+    update(ticker) {
         if (!this.active) return;
 
         const delta = ticker.deltaMS / 1000;
@@ -258,7 +261,7 @@ export class ParticleEmitter extends Container {
         for (const particle of this.particles) {
             particle.update(delta);
         }
-    };
+    }
 
     setEmitPosition(x, y) {
         this.emitPosition.x = x;
