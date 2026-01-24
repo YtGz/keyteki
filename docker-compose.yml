@@ -34,12 +34,14 @@ services:
             - '48724:9339'
         volumes:
             - './server:/usr/src/app/server'
+            - './config:/usr/src/app/config'
         command:
             - node
             - '--inspect=0.0.0.0:9339'
             - 'server/gamenode'
         environment:
             - NODE_ENV=development
+            - PORT=48723
     postgres:
         image: postgres
         environment:

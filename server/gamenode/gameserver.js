@@ -85,6 +85,7 @@ class GameServer {
         const corsOrigin = this.configService.getValueForSection('gameNode', 'origin');
         if (corsOrigin) {
             options.origins = corsOrigin;
+            logger.info(`Setting CORS origins to: ${corsOrigin}`);
         }
 
         logger.info(

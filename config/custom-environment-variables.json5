@@ -12,6 +12,6 @@
     gameNode: {
         name: 'SERVER',
         host: 'HOST',
-        socketioPort: 'PORT'
+        socketioPort: 'PUBLIC_PORT'
     }
 }

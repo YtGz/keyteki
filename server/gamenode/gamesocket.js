@@ -101,10 +101,7 @@ class GameSocket extends EventEmitter {
         const helloData = {
             maxGames: this.isDraining ? 0 : config.maxGames,
             version: this.version,
-            port:
-                process.env.NODE_ENV === 'production'
-                    ? 80
-                    : process.env.PORT || config.gameNode.socketioPort,
+            port: config.gameNode.socketioPort,
             protocol: this.protocol,
             games: games,
             draining: this.isDraining
@@ -114,6 +111,7 @@ class GameSocket extends EventEmitter {
             helloData.address = this.listenAddress;
         }
 
+        logger.info(`Sending HELLO with port=${helloData.port}, address=${helloData.address}`);
         this.send('HELLO', helloData);
     }
 

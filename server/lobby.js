@@ -603,6 +603,7 @@ class Lobby {
             handoffData.address = gameNode.address;
         }
 
+        logger.info(`Sending handoff: ${JSON.stringify(handoffData)}`);
         socket.send('handoff', handoffData);
     }
 
